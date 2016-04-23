@@ -1,8 +1,8 @@
 /**
- * Zumba(r) Angular Waypoints v2.0.0 - 2015-12-04
+ * Zumba(r) Angular Waypoints v2.0.0 - 2016-04-22
  * An AngularJS module for working with Waypoints
  *
- * Copyright (c) 2015 Zumba (r)
+ * Copyright (c) 2016 Zumba (r)
  * Licensed MIT
  */
 /**
@@ -108,6 +108,19 @@ WaypointController.prototype.processWaypoint = function processWaypoint(qualifie
 	setWaypoint(waypoints[namespace], data.waypoint);
 };
 
+var zumWaypointContainer = function zumWaypointContainer() {
+	'use strict';
+
+	return {
+		restrict: 'A',
+		// We have to use controller instead of link here so that it will
+		// always run earlier than nested waypoint directives
+		controller: ['$scope', '$element', function ($scope, $element) {
+			$element.data('WaypointContainer', $element);
+		}]
+	};
+};
+
 var zumWaypoint = function zumWaypoint($window, WaypointService) {
 	return {
 		controller : 'WaypointController',
@@ -120,11 +133,20 @@ var zumWaypoint = function zumWaypoint($window, WaypointService) {
 		link : function zumWaypointLink(scope, element, attrs, ctrl) {
 			var callback = angular.bind(ctrl, ctrl.processWaypoint);
 			/*jshint -W031 */
-			new $window.Waypoint({
+
+			var options = {
 				element: element[0],
 				handler : WaypointService.getHandlerSync(scope, callback),
 				offset : scope.offset || 0
-			});
+			};
+
+			var $context = element.inheritedData('WaypointContainer');
+			if($context){
+				options.context = $context.context;
+			}
+
+			new $window.Waypoint(options);
+			/*jshint +W031 */
 		}
 	};
 };

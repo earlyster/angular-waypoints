@@ -1,5 +1,5 @@
 /*!
-Waypoints - 4.0.0
+Waypoints - 3.1.1
 Copyright © 2011-2015 Caleb Troughton
 Licensed under the MIT license.
 https://github.com/imakewebthings/waypoints/blog/master/licenses.txt
@@ -755,10 +755,10 @@ https://github.com/imakewebthings/waypoints/blog/master/licenses.txt
 }(this, function (angular) {
 	
 	/**
-	 * Zumba(r) Angular Waypoints v2.0.0 - 2015-12-04
+	 * Zumba(r) Angular Waypoints v2.0.0 - 2016-04-22
 	 * An AngularJS module for working with Waypoints
 	 *
-	 * Copyright (c) 2015 Zumba (r)
+	 * Copyright (c) 2016 Zumba (r)
 	 * Licensed MIT
 	 */
 	/**
@@ -864,6 +864,19 @@ https://github.com/imakewebthings/waypoints/blog/master/licenses.txt
 		setWaypoint(waypoints[namespace], data.waypoint);
 	};
 	
+	var zumWaypointContainer = function zumWaypointContainer() {
+		'use strict';
+	
+		return {
+			restrict: 'A',
+			// We have to use controller instead of link here so that it will
+			// always run earlier than nested waypoint directives
+			controller: ['$scope', '$element', function ($scope, $element) {
+				$element.data('WaypointContainer', $element);
+			}]
+		};
+	};
+	
 	var zumWaypoint = function zumWaypoint($window, WaypointService) {
 		return {
 			controller : 'WaypointController',
@@ -876,11 +889,20 @@ https://github.com/imakewebthings/waypoints/blog/master/licenses.txt
 			link : function zumWaypointLink(scope, element, attrs, ctrl) {
 				var callback = angular.bind(ctrl, ctrl.processWaypoint);
 				/*jshint -W031 */
-				new $window.Waypoint({
+	
+				var options = {
 					element: element[0],
 					handler : WaypointService.getHandlerSync(scope, callback),
 					offset : scope.offset || 0
-				});
+				};
+	
+				var $context = element.inheritedData('WaypointContainer');
+				if($context){
+					options.context = $context.context;
+				}
+	
+				new $window.Waypoint(options);
+				/*jshint +W031 */
 			}
 		};
 	};
@@ -889,5 +911,6 @@ https://github.com/imakewebthings/waypoints/blog/master/licenses.txt
 	return angular.module('zumba.angular-waypoints', [])
 		.controller('WaypointController', ['$scope', WaypointController])
 		.directive('zumWaypoint', ['$window', 'WaypointService', zumWaypoint])
+		.directive('zumWaypointContainer',[zumWaypointContainer])
 		.service('WaypointService', ['$timeout', WaypointService]);
 }));
